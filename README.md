@@ -1,34 +1,46 @@
 
 # Derivative Price Valuation Lab
 
-This Streamlit application explores various derivative pricing models and concepts, including:
+This Streamlit application provides an interactive platform for exploring derivative pricing models. Users can adjust key parameters and visualize the impact on derivative values. The application focuses on key concepts such as binomial option pricing, put-call parity, forward pricing, and forward rate agreements.
+
+## Features
 
 1. Binomial Option Pricing Model
 2. Put-Call Parity
-3. Forward Pricing
-4. Forward Rate Agreement (FRA) Calculation
+3. Forward Price Formula
+4. Forward Rate Agreement (FRA)
 
-## Setup and Running the Application
+## Installation
 
-1. Clone this repository to your local machine.
-2. Install the required packages by running:
+1. Clone this repository
+2. Install the required packages:
    ```
    pip install -r requirements.txt
    ```
-3. Run the Streamlit application:
+3. Run the Streamlit app:
    ```
    streamlit run app.py
    ```
-4. Open your web browser and navigate to the URL provided by Streamlit (usually http://localhost:8501).
 
-## Using the Application
+## Docker
 
-- Use the navigation menu on the left to explore different aspects of derivative pricing and valuation.
-- Each page provides interactive inputs to adjust parameters and visualize their impact on the pricing models.
-- Explanations and formulas are provided to help understand the underlying concepts.
+To run the application using Docker:
 
-## Note
+1. Build the Docker image:
+   ```
+   docker build -t derivative-pricing-lab .
+   ```
+2. Run the Docker container:
+   ```
+   docker run -p 8501:8501 derivative-pricing-lab
+   ```
 
-This application is for educational purposes only and should not be used for actual financial decisions without proper validation and risk assessment.
+## Usage
+
+Navigate through the different pages using the sidebar. Each page allows you to input parameters and visualize the results of the corresponding pricing model.
+
+## License
 
 © 2025 QuantUniversity. All Rights Reserved.
+
+The purpose of this demonstration is solely for educational use and illustration. Any reproduction of this demonstration requires prior written consent from QuantUniversity.
