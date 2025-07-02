@@ -1,8 +1,8 @@
 
 import streamlit as st
+import plotly.express as px
 import pandas as pd
 import numpy as np
-import plotly.express as px
 
 st.set_page_config(page_title="QuLab: Derivative Price Valuation", layout="wide")
 st.sidebar.image("https://www.quantuniversity.com/assets/img/logo5.jpg")
@@ -10,22 +10,38 @@ st.sidebar.divider()
 st.title("Derivative Price Valuation")
 st.divider()
 
-st.markdown('''
-In this lab, we explore various derivative pricing models and concepts, including the Binomial Option Pricing Model, Put-Call Parity, Forward Price Formula, and Forward Rate Agreement (FRA). These models are essential for understanding and valuing financial derivatives.
+st.markdown(r'''
+In this lab, we explore various derivative pricing models and concepts, including:
 
-1. **Binomial Option Pricing Model**: This model calculates the theoretical value of options using a discrete-time framework. It considers the possible up and down movements of the underlying asset price over time.
+1. **Binomial Option Pricing Model**: This model calculates the theoretical value of options using a binomial tree approach. The key formula for the call option price is:
 
-2. **Put-Call Parity**: This principle establishes a relationship between the prices of European put and call options with the same strike price and expiration date.
+   $$C_0 = rac{\pi C_u + (1 - \pi) C_d}{1 + r}$$
 
-3. **Forward Price Formula**: This formula determines the price today at which an asset can be bought or sold for delivery at a future date.
+   Where $C_0$ is the call option price at time 0, $C_u$ and $C_d$ are the call option prices if the underlying asset price goes up or down, respectively, $\pi$ is the risk-neutral probability of an upward move, and $r$ is the risk-free interest rate.
 
-4. **Forward Rate Agreement (FRA)**: This is a contract that guarantees a specific interest rate for a future deposit or loan.
+2. **Put-Call Parity**: This principle establishes a relationship between European put and call options with the same strike price and expiration date:
 
-Use the navigation menu on the left to explore each concept in detail and perform calculations with interactive inputs.
+   $$S_0 + P_0 = c_0 + rac{X}{(1 + r)^T}$$
+
+   Where $S_0$ is the current price of the underlying asset, $P_0$ is the put option price, $c_0$ is the call option price, $X$ is the strike price, $r$ is the risk-free rate, and $T$ is the time to expiration.
+
+3. **Forward Price Formula**: This formula determines the price today at which an asset can be bought at a future date:
+
+   $$F_0 = S_0(1 + r)^T$$
+
+   Where $F_0$ is the forward price, $S_0$ is the current spot price, $r$ is the risk-free rate, and $T$ is the time until expiration.
+
+4. **Forward Rate Agreement (FRA)**: This contract ensures a specific rate is guaranteed for a future deposit:
+
+   $$	ext{Settlement at maturity} = N 	imes rac{(R_K - R_F) 	imes rac{d}{360}}{1 + R_K rac{d}{360}}$$
+
+   Where $N$ is the notional principal, $R_K$ is the interest rate for the term the FRA is trying to cover, $R_F$ is the rate in the FRA agreement to be paid, and $d$ is the number of days.
+
+This lab provides an interactive platform to explore these concepts and visualize how changes in various parameters affect derivative prices.
 ''')
 
 # Your code starts here
-page = st.sidebar.selectbox(label="Navigation", options=["Binomial Option Pricing", "Put-Call Parity", "Forward Price", "Forward Rate Agreement"])
+page = st.sidebar.selectbox(label="Navigation", options=["Binomial Option Pricing", "Put-Call Parity", "Forward Pricing", "FRA Calculator"])
 
 if page == "Binomial Option Pricing":
     from application_pages.binomial_option_pricing import run_binomial_option_pricing
@@ -33,12 +49,12 @@ if page == "Binomial Option Pricing":
 elif page == "Put-Call Parity":
     from application_pages.put_call_parity import run_put_call_parity
     run_put_call_parity()
-elif page == "Forward Price":
-    from application_pages.forward_price import run_forward_price
-    run_forward_price()
-elif page == "Forward Rate Agreement":
-    from application_pages.forward_rate_agreement import run_forward_rate_agreement
-    run_forward_rate_agreement()
+elif page == "Forward Pricing":
+    from application_pages.forward_pricing import run_forward_pricing
+    run_forward_pricing()
+elif page == "FRA Calculator":
+    from application_pages.fra_calculator import run_fra_calculator
+    run_fra_calculator()
 # Your code ends
 
 st.divider()
