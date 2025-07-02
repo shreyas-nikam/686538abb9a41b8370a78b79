@@ -1,11 +1,18 @@
 
 import streamlit as st
+import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
-def calculate_put_call_parity(S, K, T, r, call_price):
-    put_price = call_price + K * np.exp(-r * T) - S
-    return put_price
+def calculate_put_call_parity(S, K, T, r, call_price=None, put_price=None):
+    if call_price is not None:
+        put_price = call_price - S + K * np.exp(-r * T)
+        return put_price
+    elif put_price is not None:
+        call_price = put_price + S - K * np.exp(-r * T)
+        return call_price
+    else:
+        return None
 
 def run_put_call_parity():
     st.header("Put-Call Parity")
@@ -18,44 +25,65 @@ def run_put_call_parity():
     $$S_0 + P_0 = c_0 + \frac{X}{(1 + r)^T}$$
 
     Where:
-    - $S_0$ is the current price of the underlying asset
-    - $P_0$ is the current price of the European put option
-    - $c_0$ is the current price of the European call option
-    - $X$ is the strike price of the options
+    - $S_0$ is the current stock price
+    - $P_0$ is the put option price
+    - $c_0$ is the call option price
+    - $X$ is the strike price
     - $r$ is the risk-free interest rate
     - $T$ is the time to expiration
 
-    This relationship must hold to prevent arbitrage opportunities.
+    This relationship should hold to prevent arbitrage opportunities.
     ''')
 
     # User inputs
-    S = st.number_input("Current stock price", min_value=1.0, value=100.0)
-    K = st.number_input("Strike price", min_value=1.0, value=100.0)
-    T = st.number_input("Time to maturity (in years)", min_value=0.1, value=1.0)
-    r = st.number_input("Risk-free rate", min_value=0.0, max_value=1.0, value=0.05)
-    call_price = st.number_input("Call option price", min_value=0.0, value=10.0)
+    S = st.number_input("Current stock price ($)", min_value=0.01, value=100.0, step=0.01)
+    K = st.number_input("Strike price ($)", min_value=0.01, value=100.0, step=0.01)
+    T = st.number_input("Time to expiration (years)", min_value=0.01, value=1.0, step=0.01)
+    r = st.number_input("Risk-free rate (%)", min_value=0.0, value=5.0, step=0.1) / 100
 
-    if st.button("Calculate Put Price"):
-        put_price = calculate_put_call_parity(S, K, T, r, call_price)
-        st.success(f"The put option price according to put-call parity is: ${put_price:.2f}")
+    option_type = st.radio("Select the option price you want to calculate:", ('Put', 'Call'))
 
-        # Visualization
-        call_prices = np.linspace(0, 20, 100)
-        put_prices = [calculate_put_call_parity(S, K, T, r, c) for c in call_prices]
+    if option_type == 'Put':
+        call_price = st.number_input("Call option price ($)", min_value=0.01, value=10.0, step=0.01)
+        if st.button("Calculate Put Price"):
+            put_price = calculate_put_call_parity(S, K, T, r, call_price=call_price)
+            st.success(f"The put option price is: ${put_price:.2f}")
 
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=call_prices, y=put_prices, mode='lines', name='Put-Call Parity'))
-        fig.update_layout(title='Put-Call Parity Relationship',
-                          xaxis_title='Call Option Price',
-                          yaxis_title='Put Option Price')
-        st.plotly_chart(fig)
+            # Visualization
+            call_prices = np.linspace(0, call_price * 2, 100)
+            put_prices = [calculate_put_call_parity(S, K, T, r, call_price=cp) for cp in call_prices]
 
-        st.markdown('''
-        The graph above illustrates the linear relationship between call and put option prices 
-        as defined by put-call parity. For a given set of parameters (stock price, strike price, 
-        time to maturity, and risk-free rate), as the call option price increases, the corresponding 
-        put option price decreases linearly to maintain the parity relationship.
-        ''')
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=call_prices, y=put_prices, mode='lines', name='Put-Call Parity'))
+            fig.add_trace(go.Scatter(x=[call_price], y=[put_price], mode='markers', name='Current Prices'))
+            fig.update_layout(title='Put-Call Parity Relationship',
+                              xaxis_title='Call Option Price ($)',
+                              yaxis_title='Put Option Price ($)')
+            st.plotly_chart(fig)
+
+    else:  # Call
+        put_price = st.number_input("Put option price ($)", min_value=0.01, value=10.0, step=0.01)
+        if st.button("Calculate Call Price"):
+            call_price = calculate_put_call_parity(S, K, T, r, put_price=put_price)
+            st.success(f"The call option price is: ${call_price:.2f}")
+
+            # Visualization
+            put_prices = np.linspace(0, put_price * 2, 100)
+            call_prices = [calculate_put_call_parity(S, K, T, r, put_price=pp) for pp in put_prices]
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=put_prices, y=call_prices, mode='lines', name='Put-Call Parity'))
+            fig.add_trace(go.Scatter(x=[put_price], y=[call_price], mode='markers', name='Current Prices'))
+            fig.update_layout(title='Put-Call Parity Relationship',
+                              xaxis_title='Put Option Price ($)',
+                              yaxis_title='Call Option Price ($)')
+            st.plotly_chart(fig)
+
+    st.markdown('''
+    The graph above illustrates the Put-Call Parity relationship. 
+    The line represents all possible combinations of put and call prices that satisfy the Put-Call Parity equation. 
+    The point represents the current prices of the put and call options.
+    ''')
 
 if __name__ == "__main__":
     run_put_call_parity()
