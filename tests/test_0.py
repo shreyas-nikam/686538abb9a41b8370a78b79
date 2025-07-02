@@ -1,69 +1,57 @@
 import pytest
-from definition_a136e8b065734d96b6228c296e25e004 import calculate_simple_interest_fv
+from definition_157684f6dd064ec48c93b909e43d434f import calculate_simple_interest_fv
 
-@pytest.mark.parametrize(
-    "principal, annual_rate, time_years, expected",
-    [
-        # --- Valid cases (positive inputs) ---
-        (1000.0, 0.05, 10.0, 1500.0),
-        (500.0, 0.03, 5.0, 575.0),
-        (2500.0, 0.065, 3.5, pytest.approx(3068.75)),
-        # Rate as an integer (e.g., 5 means 500%)
-        (100.0, 5, 2.0, 1100.0), # 100 * (1 + 5 * 2) = 100 * 11 = 1100.0
+@pytest.mark.parametrize("principal, annual_rate, time_years, expected", [
+    # Happy Path: Valid inputs
+    (1000.0, 0.05, 10, 1500.0),  # Example from simple interest formula spec
+    (5000.0, 0.03, 5, 5750.0),   # Another standard positive case
+    (100.0, 0.01, 1, 101.0),     # Smallest non-zero time, small rate
+    (0.0, 0.05, 10, 0.0),        # Zero principal: FV should be 0
+    (1000.0, 0.0, 10, 1000.0),   # Zero annual rate: FV should be principal
+    (1000.0, 0.05, 0, 1000.0),   # Zero time: FV should be principal
+    (0.0, 0.0, 0, 0.0),          # All zeros
+    (1234.56, 0.0789, 7, 1234.56 * (1 + 0.0789 * 7)), # Mixed floats and int
+    (1_000_000.0, 0.1, 50, 6_000_000.0), # Large principal, rate, and time
+    (10.0, 0.001, 100, 11.0),    # Small annual rate, long time
+    (1_000_000_000.0, 0.00000001, 1_000_000_000, 1_000_000_010.0), # Extreme values where r*t is small
+    (2000, 0.02, 3, 2000 * (1 + 0.02 * 3)), # Principal and rate as int (should be implicitly cast to float)
+    (999.99, 0.0001, 1, 999.99 * (1 + 0.0001 * 1)), # Very small rate and time
+])
+def test_calculate_simple_interest_fv_valid_inputs(principal, annual_rate, time_years, expected):
+    """
+    Test cases for valid inputs to calculate_simple_interest_fv.
+    """
+    assert calculate_simple_interest_fv(principal, annual_rate, time_years) == pytest.approx(expected)
 
-        # --- Valid cases (zero inputs) ---
-        (0.0, 0.05, 10.0, 0.0),  # Zero principal
-        (1000.0, 0.0, 10.0, 1000.0),  # Zero annual_rate
-        (1000.0, 0.05, 0.0, 1000.0),  # Zero time_years
-        (0.0, 0.0, 0.0, 0.0),  # All zeros
-        (0.0, 0.0, 10.0, 0.0), # Zero principal and rate, non-zero time
-        (0.0, 0.05, 0.0, 0.0), # Zero principal and time, non-zero rate
-        (1000.0, 0.0, 0.0, 1000.0), # Zero rate and time, non-zero principal
+@pytest.mark.parametrize("principal, annual_rate, time_years, expected_exception", [
+    # Error Handling: Invalid values (negative principal, rate, time)
+    # For investment context, these should typically be non-negative.
+    (-100.0, 0.05, 10, ValueError), # Negative principal
+    (1000.0, -0.05, 10, ValueError), # Negative annual rate
+    (1000.0, 0.05, -10, ValueError), # Negative time
+    (-1.0, -0.01, -1, ValueError),  # All negative combination
+    
+    # Error Handling: Invalid types for 'time_years' (must be int as per docstring)
+    (100.0, 0.05, 10.5, TypeError),  # Time as float
+    (100.0, 0.05, "10", TypeError),  # Time as string
+    (1000.0, 0.05, None, TypeError), # Time as None
+    (1000.0, 0.05, [10], TypeError), # Time as list
+    (1000.0, 0.05, {}, TypeError), # Time as dict
 
-        # --- Valid cases (large numbers) ---
-        (1_000_000.0, 0.1, 100.0, 11_000_000.0),
-        (1e9, 0.01, 200.0, pytest.approx(3e9)), # 1e9 * (1 + 0.01 * 200) = 1e9 * (1 + 2) = 3e9
+    # Error Handling: Invalid types for 'principal' (must be float or int)
+    ("1000", 0.05, 10, TypeError),  # Principal as string
+    (None, 0.05, 10, TypeError),    # Principal as None
+    ([1000], 0.05, 10, TypeError),  # Principal as list
+    ({"P":1000}, 0.05, 10, TypeError), # Principal as dict
 
-        # --- Valid cases (small numbers) ---
-        (1.0, 0.0001, 1.0, pytest.approx(1.0001)),
-        (0.001, 0.01, 0.01, pytest.approx(0.001 * (1 + 0.01 * 0.01))), # 0.001 * (1 + 0.0001) = 0.0010001
-
-        # --- Valid cases (Boolean inputs, treated as 0 or 1 for numeric calculations) ---
-        (True, 0.05, 10.0, 1.0 * (1 + 0.05 * 10)), # 1 * 1.5 = 1.5
-        (100.0, True, 5.0, 100.0 * (1 + 1 * 5)), # 100 * 6 = 600.0
-        (100.0, 0.05, False, 100.0 * (1 + 0.05 * 0)), # 100 * 1 = 100.0
-        (True, False, True, 1.0 * (1 + 0 * 1)), # 1.0
-        (False, False, False, 0.0), # 0.0 * (1 + 0 * 0) = 0.0
-
-        # --- Invalid value cases (should raise ValueError) ---
-        (-1000.0, 0.05, 10.0, ValueError),  # Negative principal
-        (1000.0, -0.05, 10.0, ValueError),  # Negative annual_rate
-        (1000.0, 0.05, -10.0, ValueError),  # Negative time_years
-        (-100.0, -0.01, 1.0, ValueError),   # Principal and rate negative
-        (-100.0, 0.01, -1.0, ValueError),   # Principal and time negative
-        (100.0, -0.01, -1.0, ValueError),   # Rate and time negative
-        (-100.0, -0.01, -1.0, ValueError),  # All negative inputs
-
-        # --- Invalid type cases (should raise TypeError) ---
-        ("1000", 0.05, 10.0, TypeError),  # Principal as string
-        (1000.0, "0.05", 10.0, TypeError),  # Annual rate as string
-        (1000.0, 0.05, "10", TypeError),  # Time as string
-        (None, 0.05, 10.0, TypeError),  # Principal as None
-        (1000.0, None, 10.0, TypeError),  # Annual rate as None
-        (1000.0, 0.05, None, TypeError),  # Time as None
-        ([1000], 0.05, 10.0, TypeError),  # Principal as list
-        (1000.0, (0.05,), 10.0, TypeError),  # Annual rate as tuple
-        (1000.0, 0.05, {10: "years"}, TypeError),  # Time as dictionary
-        (1000.0, 0.05, set([10]), TypeError), # Time as set
-        (b'100', 0.05, 10.0, TypeError), # Principal as bytes
-        (complex(1, 2), 0.05, 10.0, TypeError), # Principal as complex number
-        (1000.0, complex(0, 1), 10.0, TypeError), # Rate as complex number
-    ]
-)
-def test_calculate_simple_interest_fv(principal, annual_rate, time_years, expected):
-    if isinstance(expected, type) and issubclass(expected, Exception):
-        with pytest.raises(expected):
-            calculate_simple_interest_fv(principal, annual_rate, time_years)
-    else:
-        result = calculate_simple_interest_fv(principal, annual_rate, time_years)
-        assert result == expected
+    # Error Handling: Invalid types for 'annual_rate' (must be float or int)
+    (1000.0, "0.05", 10, TypeError), # Annual rate as string
+    (1000.0, None, 10, TypeError),  # Annual rate as None
+    (1000.0, {"rate":0.05}, 10, TypeError), # Annual rate as dict
+])
+def test_calculate_simple_interest_fv_invalid_inputs(principal, annual_rate, time_years, expected_exception):
+    """
+    Test cases for invalid inputs (type errors or value errors) to calculate_simple_interest_fv.
+    """
+    with pytest.raises(expected_exception):
+        calculate_simple_interest_fv(principal, annual_rate, time_years)
