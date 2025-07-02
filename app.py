@@ -3,10 +3,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-from application_pages.binomial_option_pricing import run_binomial_option_pricing
-from application_pages.put_call_parity import run_put_call_parity
-from application_pages.forward_price import run_forward_price
-from application_pages.forward_rate_agreement import run_forward_rate_agreement
+from application_pages.page1 import run_page1
+from application_pages.page2 import run_page2
+from application_pages.page3 import run_page3
 
 st.set_page_config(page_title="QuLab: Derivative Price Valuation", layout="wide")
 st.sidebar.image("https://www.quantuniversity.com/assets/img/logo5.jpg")
@@ -15,38 +14,46 @@ st.title("QuLab: Derivative Price Valuation")
 st.divider()
 
 st.markdown(r'''
-In this lab, we explore various derivative pricing models and concepts. The application allows users to interact with key financial models, adjust parameters, and visualize the results in real-time. The main concepts covered are:
+In this lab, we explore various derivative pricing models and concepts, including the Binomial Option Pricing Model, Put-Call Parity, Forward Price Formula, and Forward Rate Agreement (FRA). These models are essential for understanding and valuing financial derivatives in the market.
 
-1. **Binomial Option Pricing Model**: A method for valuing options using a discrete-time model of the varying price over time of the financial instrument underlying the option.
+Key concepts covered:
 
-2. **Put-Call Parity**: A principle that defines the relationship between the price of European put options and European call options of the same class, that is, with the same underlying asset, strike price, and expiration date.
+1. **Binomial Option Pricing Model**: This model calculates the theoretical value of options using a binomial tree approach. The risk-neutral probability is first calculated, then the call price:
 
-3. **Forward Price Formula**: A model used to determine the price today at which an asset can be bought at a future date.
+   $$C_0 = rac{\pi C_u + (1 - \pi) C_d}{1 + r}$$
 
-4. **Forward Rate Agreement (FRA)**: A contract that ensures a specific rate is guaranteed for a future deposit.
+   Where $C_0$ is the call option price at time 0, $C_u$ and $C_d$ are the call option prices if the underlying asset price goes up or down, respectively, $\pi$ is the risk-neutral probability of an upward move, and $r$ is the risk-free interest rate.
 
-Each of these concepts is explored in detail in their respective pages. You can navigate between them using the sidebar.
+2. **Put-Call Parity**: This principle establishes a relationship between European put and call options with the same strike price and expiration date:
 
-This interactive application allows you to:
-- Upload synthetic datasets
-- Adjust key parameters
-- Visualize the impact of parameter changes on derivative values
-- Understand the underlying mathematical concepts through interactive examples
+   $$S_0 + P_0 = c_0 + rac{X}{(1 + r)^T}$$
 
-Let's dive in and explore the world of derivative pricing!
+   Where $S_0$ is the current price of the underlying asset, $P_0$ is the current price of the European put option, $c_0$ is the current price of the European call option, $X$ is the strike price, $r$ is the risk-free interest rate, and $T$ is the time to expiration.
+
+3. **Forward Price Formula**: This formula determines the price today at which an asset can be bought at a future date:
+
+   $$F_0 = S_0(1 + r)^T$$
+
+   Where $F_0$ is the forward price, $S_0$ is the current spot price, $r$ is the risk-free rate, and $T$ is the time until expiration.
+
+4. **Forward Rate Agreement (FRA)**: This contract ensures a specific rate is guaranteed for a future deposit:
+
+   $$	ext{Settlement at maturity} = N 	imes rac{(R_K - R_F) 	imes rac{d}{360}}{1 + R_K rac{d}{360}}$$
+
+   Where $N$ is the notional principal, $R_K$ is the interest rate for the term the FRA is trying to cover, $R_F$ is the rate in the FRA agreement to be paid, and $d$ is the number of days.
+
+This lab provides an interactive platform to explore these concepts, allowing you to adjust parameters and visualize their impact on derivative pricing.
 ''')
 
 # Your code starts here
-page = st.sidebar.selectbox(label="Navigation", options=["Binomial Option Pricing", "Put-Call Parity", "Forward Price", "Forward Rate Agreement"])
+page = st.sidebar.selectbox(label="Navigation", options=["Binomial Option Pricing", "Put-Call Parity", "Forward Contracts"])
 
 if page == "Binomial Option Pricing":
-    run_binomial_option_pricing()
+    run_page1()
 elif page == "Put-Call Parity":
-    run_put_call_parity()
-elif page == "Forward Price":
-    run_forward_price()
-elif page == "Forward Rate Agreement":
-    run_forward_rate_agreement()
+    run_page2()
+elif page == "Forward Contracts":
+    run_page3()
 # Your code ends
 
 st.divider()
