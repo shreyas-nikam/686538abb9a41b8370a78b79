@@ -5,7 +5,6 @@ import numpy as np
 import plotly.graph_objects as go
 
 def calculate_binomial_option_price(S, K, T, r, sigma, N, option_type='call'):
-    # Calculate parameters
     dt = T / N
     u = np.exp(sigma * np.sqrt(dt))
     d = 1 / u
@@ -20,7 +19,7 @@ def calculate_binomial_option_price(S, K, T, r, sigma, N, option_type='call'):
     else:  # put
         C = np.maximum(K - ST, 0)
     
-    # Backward induction
+    # Backward iteration
     for i in range(N - 1, -1, -1):
         C = np.exp(-r * dt) * (p * C[:-1] + (1 - p) * C[1:])
     
@@ -32,52 +31,46 @@ def run_binomial_option_pricing():
     st.markdown(r'''
     The Binomial Option Pricing Model is a numerical method used to value options. It works by constructing a binomial tree that represents different possible paths that might be followed by the stock price over the life of the option.
 
-    The model is based on the following formula:
+    The model calculates the option price at each node of the tree, working backwards from the expiration to the present. The formula for the option price at each node is:
 
     $$C_0 = \frac{\pi C_u + (1 - \pi) C_d}{1 + r}$$
 
     Where:
     - $C_0$ is the current option price
-    - $C_u$ is the option value if the stock price goes up
-    - $C_d$ is the option value if the stock price goes down
+    - $C_u$ is the option price if the stock price goes up
+    - $C_d$ is the option price if the stock price goes down
     - $\pi$ is the risk-neutral probability
     - $r$ is the risk-free interest rate
-
-    The risk-neutral probability $\pi$ is calculated as:
-
-    $$\pi = \frac{1 + r - d}{u - d}$$
-
-    Where $u$ and $d$ are the up and down factors for the stock price movement.
     ''')
 
     # User inputs
-    S = st.number_input("Current stock price", min_value=1.0, value=100.0)
-    K = st.number_input("Strike price", min_value=1.0, value=100.0)
-    T = st.number_input("Time to maturity (in years)", min_value=0.1, value=1.0)
-    r = st.number_input("Risk-free rate", min_value=0.0, max_value=1.0, value=0.05)
-    sigma = st.number_input("Volatility", min_value=0.0, max_value=1.0, value=0.2)
-    N = st.number_input("Number of time steps", min_value=1, value=100)
+    S = st.number_input("Current stock price ($)", min_value=0.01, value=100.0, step=0.01)
+    K = st.number_input("Strike price ($)", min_value=0.01, value=100.0, step=0.01)
+    T = st.number_input("Time to expiration (years)", min_value=0.01, value=1.0, step=0.01)
+    r = st.number_input("Risk-free rate (%)", min_value=0.0, value=5.0, step=0.1) / 100
+    sigma = st.number_input("Volatility (%)", min_value=0.1, value=20.0, step=0.1) / 100
+    N = st.number_input("Number of time steps", min_value=1, value=50, step=1)
     option_type = st.selectbox("Option type", ['call', 'put'])
 
     if st.button("Calculate Option Price"):
-        option_price = calculate_binomial_option_price(S, K, T, r, sigma, N, option_type)
-        st.success(f"The {option_type} option price is: ${option_price:.2f}")
+        price = calculate_binomial_option_price(S, K, T, r, sigma, N, option_type)
+        st.success(f"The {option_type} option price is: ${price:.2f}")
 
         # Sensitivity analysis
-        sigmas = np.linspace(0.1, 0.5, 50)
-        prices = [calculate_binomial_option_price(S, K, T, r, sig, N, option_type) for sig in sigmas]
+        steps = 50
+        stock_prices = np.linspace(S * 0.5, S * 1.5, steps)
+        option_prices = [calculate_binomial_option_price(s, K, T, r, sigma, N, option_type) for s in stock_prices]
 
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=sigmas, y=prices, mode='lines', name='Option Price'))
-        fig.update_layout(title='Option Price Sensitivity to Volatility',
-                          xaxis_title='Volatility',
-                          yaxis_title='Option Price')
+        fig.add_trace(go.Scatter(x=stock_prices, y=option_prices, mode='lines', name='Option Price'))
+        fig.update_layout(title='Option Price Sensitivity to Stock Price',
+                          xaxis_title='Stock Price ($)',
+                          yaxis_title='Option Price ($)')
         st.plotly_chart(fig)
 
         st.markdown('''
-        The graph above shows how the option price changes with volatility. 
-        As volatility increases, the option price typically increases because there's a higher chance 
-        of the option ending up in-the-money.
+        The graph above shows how the option price changes with the underlying stock price. 
+        This relationship is known as the option's delta and is a crucial concept in option pricing and risk management.
         ''')
 
 if __name__ == "__main__":
